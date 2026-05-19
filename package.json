@@ -1,0 +1,17 @@
+{
+  "name": "sapa-warga",
+  "version": "1.0.0",
+  "description": "Sistem Informasi Sapa Warga",
+  "main": "index.js",
+  "scripts": {
+    "server": "cd server && node src/app.js",
+    "client": "cd client && npm run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

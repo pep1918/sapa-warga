@@ -1,6 +1,9 @@
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
+
+const authRoutes = require('./routes/authRoutes');
+const wargaRoutes = require('./routes/wargaRoutes'); // PASTIKAN BARIS INI ADA
+const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 
@@ -8,15 +11,11 @@ app.use(cors());
 app.use(express.json());
 
 
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'Sistem Sapa Warga Online' });
-});
-
-
-// app.use('/api/auth', require('./routes/authRoutes'));
-// app.use('/api/surat', require('./routes/suratRoutes'));
+app.use('/api/auth', authRoutes);
+app.use('/api/warga', wargaRoutes); 
+app.use('/api/admin', adminRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Server berjalan di port ${PORT}`);
+    // console.log(`🚀 Server Backend Sapa Warga berjalan normal di http://localhost:${PORT}`);
 });
