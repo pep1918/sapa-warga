@@ -3,16 +3,16 @@ import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import axios from 'axios';
 
 export const LaporMasalah = () => {
-    
+    // Tarik data aman dari LocalStorage
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     
-    
+    // State Form
     const [kategori, setKategori] = useState('Infrastruktur / Fasilitas Umum');
     const [urgensi, setUrgensi] = useState('Sedang');
     const [lokasi, setLokasi] = useState('');
     const [deskripsi, setDeskripsi] = useState('');
     
-    
+    // State Riwayat
     const [riwayatAduan, setRiwayatAduan] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -40,7 +40,7 @@ export const LaporMasalah = () => {
     const handleAduanSubmit = async (e) => {
         e.preventDefault();
         
-        
+        // Pengecekan Sesi 
         if (!currentUser.id) {
             return alert("Sesi ID Anda tidak valid. Wajib Log Out lalu Login kembali!");
         }
@@ -62,7 +62,6 @@ export const LaporMasalah = () => {
             fetchRiwayatAduan();
         } catch (err) {
             console.error(err);
-            // Tangkap pesan jujur dari Backend Node.js
             const pesanError = err.response?.data?.error || err.message;
             alert(`Gagal mengirim laporan! \nAlasan: ${pesanError}`);
         }
@@ -120,7 +119,7 @@ export const LaporMasalah = () => {
 
                         <div className="border-t border-slate-100 pt-4 flex justify-end">
                             <button type="submit" className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow transition-colors text-xs">
-                                Kirim Aduan ke Database RT
+                                Kirim 
                             </button>
                         </div>
                     </form>
@@ -153,6 +152,7 @@ export const LaporMasalah = () => {
                                     
                                     <p className="text-sm text-slate-600">{aduan.deskripsi}</p>
 
+                                    {/* MUNCUL JIKA ADMIN SUDAH MERESPON */}
                                     {aduan.tanggapan_admin && (
                                         <div className="mt-3 p-3 bg-emerald-50 border border-emerald-100 rounded-lg">
                                             <span className="text-[11px] font-bold text-emerald-800 uppercase block mb-1">Tanggapan Admin:</span>

@@ -84,7 +84,7 @@ export const Login = () => {
             <div className="hidden md:block md:w-1/2 lg:w-7/12 relative bg-slate-900">
                 {/* Gambar Background dari Unsplash */}
                 <img 
-                    src="https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=1170&auto=format&fit=crop" 
+                    src="https://plus.unsplash.com/premium_photo-1675629118402-902d7dabda23?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8Z3VudW5nfGVufDB8fDB8fHww" 
                     alt="Komunitas Warga" 
                     className="absolute inset-0 w-full h-full object-cover opacity-60"
                 />

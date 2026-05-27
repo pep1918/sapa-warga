@@ -89,7 +89,7 @@ export const Register = () => {
                                 type="text" name="nama_lengkap" required 
                                 value={formData.nama_lengkap} onChange={handleChange} 
                                 className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all" 
-                                placeholder="Contoh: Budi Santoso" 
+                                placeholder="Nama Lengkap" 
                             />
                         </div>
                         <div className="space-y-1.5">
