@@ -3,7 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
 export const Login = () => {
-    const [email, setEmail] = useState('');
+    // 1. STATE MENGGUNAKAN USERNAME
+    const [username, setUsername] = useState(''); 
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -14,14 +15,16 @@ export const Login = () => {
         setError('');
         setLoading(true);
         try {
-            const res = await axios.post('/api/auth/login', { email, password });
+            // 2. MENGIRIM USERNAME KE BACKEND
+            const res = await axios.post('/api/auth/login', { username, password });
             
             localStorage.setItem('user', JSON.stringify(res.data.user));
             localStorage.setItem('token', res.data.token);
             
-            
             if (res.data.user.role === 'admin') {
                 navigate('/admin/dashboard');
+            } else if (res.data.user.role === 'rt') {
+                navigate('/rt/dashboard');
             } else {
                 navigate('/warga/dashboard');
             }
@@ -58,12 +61,27 @@ export const Login = () => {
 
                     <form onSubmit={handleLogin} className="space-y-5">
                         <div className="space-y-1.5">
-                            <label className="text-sm font-bold text-slate-700">Alamat Email</label>
-                            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all outline-none" placeholder="" />
+                            {/* 3. INPUT USERNAME (Tipe teks, otomatis huruf kecil, tanpa spasi) */}
+                            <label className="text-sm font-bold text-slate-700">Username</label>
+                            <input 
+                                type="text" 
+                                required 
+                                value={username} 
+                                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))} 
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all outline-none" 
+                                placeholder="username" 
+                            />
                         </div>
                         <div className="space-y-1.5">
                             <label className="text-sm font-bold text-slate-700">Kata Sandi</label>
-                            <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all outline-none" placeholder="••••••••" />
+                            <input 
+                                type="password" 
+                                required 
+                                value={password} 
+                                onChange={(e) => setPassword(e.target.value)} 
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all outline-none" 
+                                placeholder="••••••••" 
+                            />
                         </div>
                         
                         <div className="pt-2">
@@ -82,13 +100,11 @@ export const Login = () => {
 
             {/* SISI KANAN: GAMBAR & BRANDING */}
             <div className="hidden md:block md:w-1/2 lg:w-7/12 relative bg-slate-900">
-                {/* Gambar Background dari Unsplash */}
                 <img 
                     src="https://plus.unsplash.com/premium_photo-1675629118402-902d7dabda23?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8Z3VudW5nfGVufDB8fDB8fHww" 
                     alt="Komunitas Warga" 
                     className="absolute inset-0 w-full h-full object-cover opacity-60"
                 />
-                {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent"></div>
                 
                 <div className="absolute bottom-0 left-0 p-12 lg:p-20 text-white w-full">

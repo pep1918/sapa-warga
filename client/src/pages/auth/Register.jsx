@@ -6,6 +6,8 @@ export const Register = () => {
     const [formData, setFormData] = useState({ 
         nik: '', 
         nama_lengkap: '', 
+        username: '', // Data baru
+        no_telp: '',  // Data baru
         email: '', 
         password: '', 
         confirmPassword: '' 
@@ -14,12 +16,19 @@ export const Register = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        // Khusus username: paksa huruf kecil dan hilangkan spasi
+        if (name === 'username') {
+            setFormData({ ...formData, [name]: value.toLowerCase().replace(/\s/g, '') });
+        } else {
+            setFormData({ ...formData, [name]: value });
+        }
+    };
 
     const handleRegister = async (e) => {
         e.preventDefault();
         setError(''); 
-        
         
         if (formData.password !== formData.confirmPassword) {
             return setError('Konfirmasi kata sandi tidak cocok!');
@@ -33,20 +42,20 @@ export const Register = () => {
 
         setLoading(true);
         try {
-            
+            // Mengirim semua data (termasuk username dan no_telp) ke Backend
             const response = await axios.post('/api/auth/register', {
                 nik: formData.nik,
                 nama_lengkap: formData.nama_lengkap,
+                username: formData.username,
+                no_telp: formData.no_telp,
                 email: formData.email,
                 password: formData.password
             });
             
-            
-            alert(response.data.message || "Pendaftaran berhasil! Silakan masuk menggunakan akun Anda.");
+            alert(response.data.message || "Pendaftaran berhasil! Silakan masuk menggunakan Username Anda.");
             navigate('/login');
 
         } catch (err) {
-            
             const pesanDariBackend = err.response?.data?.error;
             setError(pesanDariBackend || 'Terjadi kesalahan saat mencoba mendaftar ke server.');
         } finally {
@@ -57,7 +66,7 @@ export const Register = () => {
     return (
         <div className="min-h-screen w-full flex flex-col md:flex-row-reverse bg-white">
             
-            {}
+            {/* SISI KANAN: FORM PENDAFTARAN */}
             <div className="w-full md:w-1/2 lg:w-5/12 flex items-center justify-center p-8 sm:p-12 lg:p-16 overflow-y-auto">
                 <div className="w-full max-w-md space-y-6 mt-8 md:mt-0">
                     <div>
@@ -65,7 +74,6 @@ export const Register = () => {
                         <p className="text-slate-500 text-sm">Lengkapi data diri Anda sesuai KTP untuk mengakses layanan administrasi RT secara digital.</p>
                     </div>
 
-                    {}
                     {error && (
                         <div className="bg-rose-50 text-rose-600 p-3.5 rounded-xl text-[13px] font-bold border border-rose-200 flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
                             <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -83,6 +91,7 @@ export const Register = () => {
                                 placeholder="Masukkan 16 digit NIK" 
                             />
                         </div>
+                        
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">Nama Lengkap (Sesuai KTP)</label>
                             <input 
@@ -92,6 +101,29 @@ export const Register = () => {
                                 placeholder="Nama Lengkap" 
                             />
                         </div>
+
+                        {/* BARIS BARU: USERNAME & NO TELP (Berjejer 2 Kolom) */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                                <label className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">Username</label>
+                                <input 
+                                    type="text" name="username" required 
+                                    value={formData.username} onChange={handleChange} 
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all" 
+                                    placeholder="Contoh: budi99" 
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">No. Telp / WA</label>
+                                <input 
+                                    type="number" name="no_telp" required 
+                                    value={formData.no_telp} onChange={handleChange} 
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all" 
+                                    placeholder="0812xxxxxx" 
+                                />
+                            </div>
+                        </div>
+
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">Alamat Email Aktif</label>
                             <input 
@@ -101,6 +133,7 @@ export const Register = () => {
                                 placeholder="budi@gmail.com" 
                             />
                         </div>
+                        
                         <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-1.5">
                                 <label className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">Kata Sandi</label>
@@ -164,7 +197,7 @@ export const Register = () => {
                     <div className="flex items-center gap-4 border-l-4 border-emerald-400 pl-4">
                         <div>
                             <p className="text-[11px] text-emerald-300 font-bold uppercase tracking-widest">Keamanan Data Terjamin</p>
-                            <p className="text-sm font-medium mt-0.5">Password Anda dienkripsi (Hash) dan tidak dapat dibaca oleh siapa pun, termasuk Admin.</p>
+                            <p className="text-sm font-medium mt-0.5">Password Anda dienkripsi dan tidak dapat dibaca oleh siapa pun, termasuk Admin.</p>
                         </div>
                     </div>
                 </div>

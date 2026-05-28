@@ -10,30 +10,23 @@ export const PengajuanSurat = () => {
     const [jenisSurat, setJenisSurat] = useState('Surat Keterangan Usaha (SKU)');
     const [paktaIntegritas, setPaktaIntegritas] = useState(false);
     const [loading, setLoading] = useState(false);
+    
+    // State baru untuk menampung file fisik yang diunggah
+    const [file, setFile] = useState(null);
 
-    // State untuk menampung parameter dinamis berdasarkan jenis surat
+    // State untuk menampung parameter dinamis
     const [metaData, setMetaData] = useState({
-        // Parameter SKU
-        namaUsaha: '',
-        jenisUsaha: '',
-        alamatUsaha: '',
-        // Parameter SKTM / Beasiswa
-        namaAnak: '',
-        sekolahAnak: '',
-        alasanSktm: '',
-        // Parameter Umum / Domisili / KTP
-        tujuanInstansi: '',
-        keteranganTambahan: ''
+        namaUsaha: '', jenisUsaha: '', alamatUsaha: '',
+        namaAnak: '', sekolahAnak: '', alasanSktm: '',
+        tujuanInstansi: '', keteranganTambahan: ''
     });
 
     const handleMetaChange = (e) => {
         setMetaData({ ...metaData, [e.target.name]: e.target.value });
     };
 
-    // Validasi input per step sebelum lanjut
     const handleNextStep = () => {
         if (step === 1) {
-            // Validasi dinamis halaman 1 berdasarkan opsi yang dipilih
             if (jenisSurat === 'Surat Keterangan Usaha (SKU)' && (!metaData.namaUsaha || !metaData.jenisUsaha || !metaData.alamatUsaha)) {
                 return alert("Mohon lengkapi seluruh rincian informasi usaha Anda!");
             }
@@ -50,16 +43,11 @@ export const PengajuanSurat = () => {
     const handleSubmitSurat = async (e) => {
         e.preventDefault();
         
-        if (!currentUser.id) {
-            return alert("Sesi login kadaluwarsa. Silakan Log Out dan Login kembali.");
-        }
-        if (!paktaIntegritas) {
-            return alert("Anda wajib menyetujui pakta integritas data berkas!");
-        }
+        if (!currentUser.id) return alert("Sesi login kadaluwarsa. Silakan Log Out dan Login kembali.");
+        if (!paktaIntegritas) return alert("Anda wajib menyetujui pakta integritas data berkas!");
 
         setLoading(true);
         try {
-            // Menyusun narasi keperluan secara kompleks & rapi dari data dinamis
             let narasiKeperluan = `Tujuan Instansi: ${metaData.tujuanInstansi}. `;
             
             if (jenisSurat === 'Surat Keterangan Usaha (SKU)') {
@@ -67,24 +55,23 @@ export const PengajuanSurat = () => {
             } else if (jenisSurat === 'Surat Keterangan Tidak Mampu (SKTM)') {
                 narasiKeperluan += `Keperluan Berkas -> Nama Anak: ${metaData.namaAnak}, Sekolah/Kampus: ${metaData.sekolahAnak || '-'}, Alasan: ${metaData.alasanSktm}.`;
             } else {
-                narasiKeperluan += `Keterangan Domisili/Umum -> Keperluan: ${metaData.keteranganTambahan || 'Administrasi umum kependudukan'}.`;
+                narasiKeperluan += `Keterangan Tambahan -> Keperluan: ${metaData.keteranganTambahan || 'Administrasi umum kependudukan'}.`;
             }
 
-            // Payload final yang 100% klop dengan kolom MySQL pengajuan_surat
-            const payload = {
-                warga_id: currentUser.id,
-                jenis_surat: jenisSurat,
-                keperluan: narasiKeperluan,
-                dokumen_pendukung: 'scan_persyaratan_tervalidasi.pdf'
-            };
+            const submitData = new FormData();
+            submitData.append('warga_id', currentUser.id);
+            submitData.append('jenis_surat', jenisSurat);
+            submitData.append('keperluan', narasiKeperluan);
+            
+            if (file) submitData.append('dokumen_pendukung', file);
 
-            await axios.post('/api/warga/surat', payload);
+            await axios.post('/api/warga/surat', submitData, { headers: { 'Content-Type': 'multipart/form-data' } });
             
-            alert(`Sukses! Permohonan berkas ${jenisSurat} Anda telah terkirim ke database pengurus RT.`);
+            alert(`Sukses! Permohonan berkas ${jenisSurat} Anda telah terkirim.`);
             
-            // Reset Form ke default
             setStep(1);
             setPaktaIntegritas(false);
+            setFile(null);
             setMetaData({
                 namaUsaha: '', jenisUsaha: '', alamatUsaha: '',
                 namaAnak: '', sekolahAnak: '', alasanSktm: '',
@@ -92,24 +79,48 @@ export const PengajuanSurat = () => {
             });
 
         } catch (err) {
-            console.error(err);
-            const msg = err.response?.data?.error || err.message;
-            alert(`Gagal memproses permohonan. Alasan: ${msg}`);
+            alert(`Gagal memproses permohonan. Alasan: ${err.response?.data?.error || err.message}`);
         } finally {
             setLoading(false);
         }
     };
 
+    // LOGIKA PINTAR: Menentukan Teks dan Aturan Upload Berdasarkan Jenis Surat
+    let infoSyarat = "";
+    let labelUpload = "";
+
+    switch(jenisSurat) {
+        case 'Surat Pengantar Pembuatan KK/KTP':
+            infoSyarat = "Karena Anda mengajukan pengantar pembuatan KK/KTP baru, silakan lampirkan Surat Kehilangan dari Kepolisian (jika hilang), Akta Kelahiran, atau Scan KK/KTP Lama (jika rusak).";
+            labelUpload = "Unggah Surat Kehilangan / Akta Lahir / Bukti Rusak";
+            break;
+        case 'Surat Keterangan Usaha (SKU)':
+            infoSyarat = "Untuk keperluan verifikasi lapangan, mohon lampirkan Foto Tempat Usaha Anda tampak depan atau KTP Pemohon.";
+            labelUpload = "Unggah Foto Tempat Usaha / KTP";
+            break;
+        case 'Surat Keterangan Tidak Mampu (SKTM)':
+            infoSyarat = "Sebagai bukti pendukung validasi RT, lampirkan Foto Kondisi Rumah Tampak Depan atau Scan Tagihan Listrik bulan terakhir.";
+            labelUpload = "Unggah Foto Rumah / Bukti Tagihan Listrik";
+            break;
+        case 'Surat Keterangan Domisili':
+            infoSyarat = "Silakan lampirkan KTP Daerah Asal Anda dan/atau Surat Perjanjian Sewa/Kontrak Rumah.";
+            labelUpload = "Unggah KTP Asal / Bukti Sewa Kontrak";
+            break;
+        default:
+            infoSyarat = "Silakan lampirkan dokumen identitas pendukung seperti KTP/KK untuk keperluan arsip digital.";
+            labelUpload = "Unggah Dokumen Pendukung";
+    }
+
     return (
         <DashboardLayout>
             <div className="max-w-3xl mx-auto space-y-6 p-2">
                 
-                {/* Status Bar Pemohon */}
+                {/* Status Bar */}
                 <div className="bg-gradient-to-r from-emerald-800 to-emerald-600 rounded-2xl p-6 text-white shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <span className="text-[10px] bg-white/20 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">Identitas Pemohon (Sesuai Database)</span>
+                        <span className="text-[10px] bg-white/20 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">Identitas Pemohon</span>
                         <h1 className="text-xl font-bold mt-1.5">{currentUser.nama_lengkap || 'Nama Warga'}</h1>
-                        <p className="text-xs text-emerald-100 mt-0.5">NIK Kependudukan: {currentUser.nik || '-'}</p>
+                        <p className="text-xs text-emerald-100 mt-0.5">NIK: {currentUser.nik || '-'}</p>
                     </div>
                     <div className="bg-white/10 px-4 py-2 rounded-xl border border-white/10 text-right backdrop-blur-sm">
                         <p className="text-[10px] text-emerald-200 font-bold uppercase">Tahapan Pengisian</p>
@@ -117,10 +128,9 @@ export const PengajuanSurat = () => {
                     </div>
                 </div>
 
-                {/* Card Formulir */}
                 <form onSubmit={handleSubmitSurat} className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-5">
                     
-                    {/* === LANGKAH 1: PARAMETER UTAMA & DINAMIS === */}
+                    {/* LANGKAH 1 */}
                     {step === 1 && (
                         <div className="space-y-5">
                             <div className="flex flex-col gap-1.5">
@@ -142,62 +152,60 @@ export const PengajuanSurat = () => {
                                 <input 
                                     type="text" name="tujuanInstansi" required
                                     value={metaData.tujuanInstansi} onChange={handleMetaChange}
-                                    placeholder="" 
+                                    placeholder="Cth: Kelurahan / Dinas Sosial / Bank Jatim" 
                                     className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm outline-none focus:border-emerald-500 transition-colors"
                                 />
                             </div>
 
                             <div className="border-t border-slate-100 pt-4"></div>
 
-                            {/* DYNAMIC FIELD: JIKA MEMILIH SURAT KETERANGAN USAHA (SKU) */}
+                            {/* DYNAMIC FIELD */}
                             {jenisSurat === 'Surat Keterangan Usaha (SKU)' && (
                                 <div className="space-y-4 p-4 bg-slate-50 border border-slate-200 rounded-2xl animate-in fade-in duration-300">
                                     <p className="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-1">Rincian Legalitas Usaha Warga</p>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="flex flex-col gap-1.5">
                                             <label className="text-[11px] font-bold text-slate-600">Nama Usaha / Toko</label>
-                                            <input type="text" name="namaUsaha" value={metaData.namaUsaha} onChange={handleMetaChange} placeholder="" className="px-3 py-2 border bg-white rounded-lg text-sm outline-none focus:border-emerald-500" />
+                                            <input type="text" name="namaUsaha" value={metaData.namaUsaha} onChange={handleMetaChange} className="px-3 py-2 border bg-white rounded-lg text-sm outline-none focus:border-emerald-500" />
                                         </div>
                                         <div className="flex flex-col gap-1.5">
                                             <label className="text-[11px] font-bold text-slate-600">Sektor / Jenis Bisnis</label>
-                                            <input type="text" name="jenisUsaha" value={metaData.jenisUsaha} onChange={handleMetaChange} placeholder="" className="px-3 py-2 border bg-white rounded-lg text-sm outline-none focus:border-emerald-500" />
+                                            <input type="text" name="jenisUsaha" value={metaData.jenisUsaha} onChange={handleMetaChange} className="px-3 py-2 border bg-white rounded-lg text-sm outline-none focus:border-emerald-500" />
                                         </div>
                                     </div>
                                     <div className="flex flex-col gap-1.5">
                                         <label className="text-[11px] font-bold text-slate-600">Alamat Fisik Tempat Usaha</label>
-                                        <input type="text" name="alamatUsaha" value={metaData.alamatUsaha} onChange={handleMetaChange} placeholder="" className="w-full px-3 py-2 border bg-white rounded-lg text-sm outline-none focus:border-emerald-500" />
+                                        <input type="text" name="alamatUsaha" value={metaData.alamatUsaha} onChange={handleMetaChange} className="w-full px-3 py-2 border bg-white rounded-lg text-sm outline-none focus:border-emerald-500" />
                                     </div>
                                 </div>
                             )}
 
-                            {/* DYNAMIC FIELD: JIKA MEMILIH SURAT KETERANGAN TIDAK MAMPU (SKTM) */}
                             {jenisSurat === 'Surat Keterangan Tidak Mampu (SKTM)' && (
                                 <div className="space-y-4 p-4 bg-slate-50 border border-slate-200 rounded-2xl animate-in fade-in duration-300">
                                     <p className="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-1">Rincian Kebutuhan Bantuan Sosial</p>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="flex flex-col gap-1.5">
                                             <label className="text-[11px] font-bold text-slate-600">Nama Lengkap Anak (Pemohon Beasiswa)</label>
-                                            <input type="text" name="namaAnak" value={metaData.namaAnak} onChange={handleMetaChange} placeholder="Nama anak kandung" className="px-3 py-2 border bg-white rounded-lg text-sm outline-none focus:border-emerald-500" />
+                                            <input type="text" name="namaAnak" value={metaData.namaAnak} onChange={handleMetaChange} className="px-3 py-2 border bg-white rounded-lg text-sm outline-none focus:border-emerald-500" />
                                         </div>
                                         <div className="flex flex-col gap-1.5">
-                                            <label className="text-[11px] font-bold text-slate-600">Nama Sekolah / Universitas (Jika Ada)</label>
-                                            <input type="text" name="sekolahAnak" value={metaData.sekolahAnak} onChange={handleMetaChange} placeholder="Cth: Universitas Negeri Surabaya" className="px-3 py-2 border bg-white rounded-lg text-sm outline-none focus:border-emerald-500" />
+                                            <label className="text-[11px] font-bold text-slate-600">Nama Sekolah / Universitas</label>
+                                            <input type="text" name="sekolahAnak" value={metaData.sekolahAnak} onChange={handleMetaChange} className="px-3 py-2 border bg-white rounded-lg text-sm outline-none focus:border-emerald-500" />
                                         </div>
                                     </div>
                                     <div className="flex flex-col gap-1.5">
-                                        <label className="text-[11px] font-bold text-slate-600">Alasan Pokok Pengajuan Pengurangan/Keringanan</label>
-                                        <textarea name="alasanSktm" value={metaData.alasanSktm} onChange={handleMetaChange} placeholder="Cth: Kelengkapan berkas keringanan UKT semester ganjil akibat kendala ekonomi keluarga..." className="w-full min-h-[70px] p-2 border bg-white rounded-lg text-sm resize-none outline-none focus:border-emerald-500" />
+                                        <label className="text-[11px] font-bold text-slate-600">Alasan Pengajuan</label>
+                                        <textarea name="alasanSktm" value={metaData.alasanSktm} onChange={handleMetaChange} className="w-full min-h-[70px] p-2 border bg-white rounded-lg text-sm resize-none outline-none focus:border-emerald-500" />
                                     </div>
                                 </div>
                             )}
 
-                            {/* FIELD KETERANGAN TAMBAHAN UNTUK JENIS SURAT LAINNYA */}
                             {jenisSurat !== 'Surat Keterangan Usaha (SKU)' && jenisSurat !== 'Surat Keterangan Tidak Mampu (SKTM)' && (
                                 <div className="flex flex-col gap-1.5 animate-in fade-in duration-300">
                                     <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">Narasi Detail Keperluan Surat</label>
                                     <textarea 
                                         name="keteranganTambahan" value={metaData.keteranganTambahan} onChange={handleMetaChange}
-                                        placeholder="Tuliskan alasan pengajuan berkas secara gamblang agar pengurus RT mudah memverifikasi berkas Anda..." 
+                                        placeholder="Tuliskan alasan pengajuan berkas agar pengurus RT mudah memverifikasinya..." 
                                         className="w-full min-h-[100px] px-3 py-2.5 border border-slate-300 rounded-xl text-sm resize-none outline-none focus:border-emerald-500" 
                                     />
                                 </div>
@@ -212,12 +220,12 @@ export const PengajuanSurat = () => {
                         </div>
                     )}
 
-                    {/* === LANGKAH 2: DOKUMEN & PERSYARATAN INTEGRITAS === */}
+                    {/* LANGKAH 2 DENGAN ATURAN DINAMIS */}
                     {step === 2 && (
                         <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
                             <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900 text-xs leading-relaxed">
-                                <span className="font-bold uppercase block mb-1">⚠️ Aturan Lampiran Berkas Fisik:</span>
-                                Sebelum berkas fisik dikirim ke rumah Ketua RT 02, Anda wajib melampirkan fotokopi Kartu Keluarga (KK) dan KTP Penduduk asli dalam bentuk digital di bawah ini untuk arsip server.
+                                <span className="font-bold uppercase block mb-1">⚠️ Aturan Lampiran Berkas:</span>
+                                {infoSyarat}
                             </div>
 
                             <div className="p-5 bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl space-y-3 text-center">
@@ -225,9 +233,15 @@ export const PengajuanSurat = () => {
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-700 cursor-pointer hover:text-emerald-700 transition-colors">
-                                        <span>Klik untuk Unggah Scan Dokumen Pendukung</span>
-                                        <input type="file" className="hidden" />
+                                    <label htmlFor="fileUpload" className="block text-xs font-bold text-slate-700 cursor-pointer hover:text-emerald-700 transition-colors">
+                                        <span>{file ? file.name : labelUpload}</span>
+                                        <input 
+                                            id="fileUpload" 
+                                            type="file" 
+                                            className="hidden" 
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            onChange={(e) => setFile(e.target.files[0])}
+                                        />
                                     </label>
                                     <p className="text-[10px] text-slate-400 mt-1">Format dokumen yang diizinkan: PDF, JPG, atau PNG (Maks. 5 MB)</p>
                                 </div>
@@ -240,7 +254,7 @@ export const PengajuanSurat = () => {
                                     className="mt-1 w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer" 
                                 />
                                 <label htmlFor="paktaIntegritas" className="text-xs text-slate-700 select-none cursor-pointer leading-relaxed">
-                                    Saya dengan kesadaran penuh menyatakan bahwa seluruh metadata kependudukan serta informasi tambahan hukum yang saya masukkan di atas adalah <strong>SAH, BENAR, DAN ASLI</strong> milik saya pribadi sesuai catatan sipil Kota Surabaya.
+                                    Saya dengan kesadaran penuh menyatakan bahwa seluruh informasi dan dokumen pendukung yang saya berikan adalah <strong>SAH, BENAR, DAN ASLI</strong> milik saya pribadi.
                                 </label>
                             </div>
 
@@ -255,7 +269,7 @@ export const PengajuanSurat = () => {
                                     type="submit" disabled={loading}
                                     className="w-2/3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold py-3 rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-2"
                                 >
-                                    {loading ? 'Mengarsip ke MySQL...' : 'Ajukan Permohonan Surat Resmi'}
+                                    {loading ? 'Mengarsip Data...' : 'Ajukan Permohonan Surat'}
                                 </button>
                             </div>
                         </div>

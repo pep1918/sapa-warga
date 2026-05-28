@@ -7,5 +7,7 @@ router.get('/surat', rtController.getAllSuratRt);
 router.put('/surat/:id', rtController.validasiSuratRt);
 router.get('/pengaduan', rtController.getAllPengaduanRt);
 router.put('/pengaduan/:id', rtController.validasiPengaduanRt);
+router.get('/notifikasi', rtController.getNotifikasiRt);
+router.put('/notifikasi/:id/read', rtController.bacaNotifikasiRt);
 
 module.exports = router;

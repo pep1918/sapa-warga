@@ -1,89 +1,69 @@
 const db = require('../config/db');
 const { v4: uuidv4 } = require('uuid');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'rahasia_sapa_warga_super_aman_123';
-
 
 exports.register = async (req, res) => {
-    const { nik, nama_lengkap, email, password } = req.body;
-
+    const { nik, nama_lengkap, email, username, no_telp, password } = req.body;
+    
     try {
+        const [existing] = await db.query(
+            'SELECT * FROM users WHERE nik = ? OR username = ?', 
+            [nik, username]
+        );
         
-        const [existingUser] = await db.query('SELECT * FROM users WHERE email = ? OR nik = ?', [email, nik]);
-        if (existingUser.length > 0) {
-            return res.status(400).json({ error: 'Gagal! Email atau NIK sudah terdaftar di sistem.' });
+        if (existing.length > 0) {
+            return res.status(400).json({ error: 'Gagal! NIK atau Username tersebut sudah terdaftar.' });
         }
 
-        
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
         const newId = uuidv4();
-        
-        
         await db.query(
-            'INSERT INTO users (id, nik, nama_lengkap, email, password, role) VALUES (?, ?, ?, ?, ?, ?)',
-            [newId, nik, nama_lengkap, email, hashedPassword, 'warga']
+            'INSERT INTO users (id, nik, nama_lengkap, email, username, no_telp, password, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [newId, nik, nama_lengkap, email, username, no_telp, password, 'warga']
         );
-
-        res.status(201).json({ success: true, message: 'Registrasi berhasil! Silakan login.' });
+        
+        res.status(201).json({ success: true, message: 'Akun berhasil dibuat! Silakan login menggunakan Username Anda.' });
     } catch (err) {
-        console.error("Error Registrasi:", err);
-        res.status(500).json({ error: 'Terjadi kesalahan server saat menyimpan data registrasi.' });
+        console.error("Error Register:", err);
+        res.status(500).json({ error: 'Terjadi kesalahan pada server saat registrasi.' });
     }
 };
 
 exports.login = async (req, res) => {
-    const { email, password } = req.body;
-
+    // 1. Tangkap username dan password
+    const { username, password } = req.body;
+    
     try {
+        // 2. Cari berdasarkan USERNAME (bukan email)
+        const [users] = await db.query(
+            'SELECT * FROM users WHERE username = ?', 
+            [username]
+        );
         
-        const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
-        
+        // Jika username tidak ada di database
         if (users.length === 0) {
-            return res.status(404).json({ error: 'Email tidak ditemukan! Silakan daftar terlebih dahulu.' });
+            return res.status(401).json({ error: 'Username tidak ditemukan! Silakan daftar terlebih dahulu.' });
         }
 
         const user = users[0];
 
-       
-        let isMatch = false;
-        if (user.password.startsWith('$2a$') || user.password.startsWith('$2b$')) {
-            
-            isMatch = await bcrypt.compare(password, user.password);
-        } else {
-            
-            isMatch = password === user.password;
+        // 3. Cek apakah password cocok
+        if (user.password !== password) {
+            return res.status(401).json({ error: 'Kata sandi salah!' });
         }
-
-        if (!isMatch) {
-            return res.status(400).json({ error: 'Kata sandi yang Anda masukkan salah!' });
-        }
-
         
-        const token = jwt.sign(
-            { id: user.id, role: user.role }, 
-            JWT_SECRET, 
-            { expiresIn: '1d' }
-        );
-
-        
-        res.json({
-            success: true,
-            message: 'Login berhasil',
-            token,
+        res.json({ 
+            success: true, 
             user: { 
                 id: user.id, 
                 nik: user.nik, 
                 nama_lengkap: user.nama_lengkap, 
-                email: user.email, 
+                email: user.email,
+                username: user.username,
+                no_telp: user.no_telp,
                 role: user.role 
-            }
+            } 
         });
     } catch (err) {
         console.error("Error Login:", err);
-        res.status(500).json({ error: 'Terjadi kesalahan server saat proses login.' });
+        res.status(500).json({ error: 'Terjadi kesalahan pada server saat login.' });
     }
 };
