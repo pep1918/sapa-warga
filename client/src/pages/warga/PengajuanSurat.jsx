@@ -152,7 +152,7 @@ export const PengajuanSurat = () => {
                                 <input 
                                     type="text" name="tujuanInstansi" required
                                     value={metaData.tujuanInstansi} onChange={handleMetaChange}
-                                    placeholder="Cth: Kelurahan / Dinas Sosial / Bank Jatim" 
+                                    placeholder="" 
                                     className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm outline-none focus:border-emerald-500 transition-colors"
                                 />
                             </div>
@@ -240,7 +240,18 @@ export const PengajuanSurat = () => {
                                             type="file" 
                                             className="hidden" 
                                             accept=".pdf,.jpg,.jpeg,.png"
-                                            onChange={(e) => setFile(e.target.files[0])}
+                                            onChange={(e) => {
+                                                const selectedFile = e.target.files[0];
+                                                if (selectedFile) {
+                                                    // Cek apakah ukuran file lebih dari 5MB (5242880 bytes)
+                                                    if (selectedFile.size > 5242880) {
+                                                        alert("Ukuran dokumen maksimal 5MB. Silakan kompres gambar atau pilih file lain.");
+                                                        e.target.value = null; // Reset input agar bisa pilih file lagi
+                                                        return;
+                                                    }
+                                                    setFile(selectedFile);
+                                                }
+                                            }}
                                         />
                                     </label>
                                     <p className="text-[10px] text-slate-400 mt-1">Format dokumen yang diizinkan: PDF, JPG, atau PNG (Maks. 5 MB)</p>

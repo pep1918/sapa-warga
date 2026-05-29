@@ -68,7 +68,7 @@ export const PortalBerita = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div className="md:col-span-2 space-y-1.5">
                             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Judul / Subjek Utama</label>
-                            <input type="text" required value={formData.judul} onChange={(e) => setFormData({ ...formData, judul: e.target.value })} placeholder="Cth: Pemberitahuan Pemadaman Listrik Bergilir" className="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm outline-none focus:border-indigo-500 font-bold text-slate-800" />
+                            <input type="text" required value={formData.judul} onChange={(e) => setFormData({ ...formData, judul: e.target.value })} placeholder="" className="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm outline-none focus:border-indigo-500 font-bold text-slate-800" />
                         </div>
                         <div className="space-y-1.5">
                             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Klasifikasi Kategori</label>
@@ -84,7 +84,7 @@ export const PortalBerita = () => {
 
                     <div className="space-y-1.5">
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Badan Informasi Terperinci</label>
-                        <textarea required value={formData.konten} onChange={(e) => setFormData({ ...formData, konten: e.target.value })} placeholder="Jabarkan secara lengkap waktu, tempat, dan instruksi untuk warga..." className="w-full min-h-[150px] px-4 py-3 border border-slate-300 rounded-xl text-sm resize-none outline-none focus:border-indigo-500 leading-relaxed" />
+                        <textarea required value={formData.konten} onChange={(e) => setFormData({ ...formData, konten: e.target.value })} placeholder="" className="w-full min-h-[150px] px-4 py-3 border border-slate-300 rounded-xl text-sm resize-none outline-none focus:border-indigo-500 leading-relaxed" />
                     </div>
 
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-2 border-t border-slate-100 mt-4">

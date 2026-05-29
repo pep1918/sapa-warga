@@ -110,7 +110,7 @@ export const Register = () => {
                                     type="text" name="username" required 
                                     value={formData.username} onChange={handleChange} 
                                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all" 
-                                    placeholder="Contoh: budi99" 
+                                    placeholder="Username" 
                                 />
                             </div>
                             <div className="space-y-1.5">
@@ -130,7 +130,7 @@ export const Register = () => {
                                 type="email" name="email" required 
                                 value={formData.email} onChange={handleChange} 
                                 className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all" 
-                                placeholder="budi@gmail.com" 
+                                placeholder="email@gmail.com" 
                             />
                         </div>
                         

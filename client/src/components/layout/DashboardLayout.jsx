@@ -149,7 +149,7 @@ export const DashboardLayout = ({ children }) => {
                         isRt ? 'bg-blue-500/20 text-blue-300 border-blue-400/30' : 
                         'bg-emerald-500/30 text-emerald-200 border-emerald-400/30'
                     }`}>
-                        {isAdmin ? 'Admin Kelurahan' : isRt ? 'Pengurus RT' : 'Warga'}
+                        {isAdmin ? 'Administrator' : isRt ? 'Pengurus RT' : 'Warga'}
                     </span>
                 </div>
 

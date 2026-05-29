@@ -109,7 +109,7 @@ export const LaporMasalah = () => {
 
                         <div className="flex flex-col gap-1.5">
                             <label className="text-[13px] font-bold text-slate-700">Lokasi Spesifik Kejadian</label>
-                            <input type="text" required value={lokasi} onChange={(e) => setLokasi(e.target.value)} placeholder="Misal: Tiang listrik depan gapura RT 02" className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:border-emerald-500" />
+                            <input type="text" required value={lokasi} onChange={(e) => setLokasi(e.target.value)} placeholder="" className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:border-emerald-500" />
                         </div>
 
                         <div className="flex flex-col gap-1.5">

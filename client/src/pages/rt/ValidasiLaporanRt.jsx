@@ -62,6 +62,26 @@ export const ValidasiLaporanRt = () => {
                                 <p className="text-slate-600 font-medium leading-relaxed">{aduan.deskripsi}</p>
                             </div>
 
+                            {/* --- BLOK TAMBAHAN: MENAMPILKAN DOKUMEN/GAMBAR --- */}
+                            {/* Pastikan properti "aduan.dokumen" sesuai dengan nama kolom di database-mu */}
+                            {aduan.dokumen && (
+                                <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-100 inline-block">
+                                    <p className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Dokumen Lampiran</p>
+                                    <img 
+                                        // Menembak langsung ke port 5000 backend Express
+                                        src={`http://localhost:5000/uploads/${aduan.dokumen}`} 
+                                        alt={`Lampiran dari ${aduan.nama_lengkap}`} 
+                                        className="w-full max-w-sm h-auto rounded-lg border border-slate-200 object-cover shadow-sm transition-transform hover:scale-[1.02]"
+                                        onError={(e) => {
+                                            // Fallback jika gambar gagal dimuat agar UI tidak rusak
+                                            e.target.onerror = null;
+                                            e.target.src = 'https://placehold.co/400x300/f8fafc/94a3b8?text=Gambar+Tidak+Ditemukan';
+                                        }}
+                                    />
+                                </div>
+                            )}
+                            {/* ------------------------------------------------ */}
+
                             {activeId === aduan.id ? (
                                 <div className="space-y-3 pt-3 border-t border-dashed border-slate-200">
                                     <textarea 
